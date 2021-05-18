@@ -3,12 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use App\Classes\AddonBuilder;
 
 class IndexController extends Controller
 {
+    public function __construct()
+    {
+        App::setlocale('ru');
+    }
+
     public function index()
     {
+        $title = trans('vars.index_title');
         $all_projects = scandir(base_path() . '/..');
         foreach ($all_projects as $key => $value) {
             if (in_array($value, ['.', '..']) || (!file_exists(base_path() . '/../' . $value . '/app') || !file_exists(base_path() . '/../' . $value . '/config.local.php'))) {
@@ -18,6 +25,7 @@ class IndexController extends Controller
 
         return view('index', [
             'all_projects' => $all_projects,
+            'title' => $title,
         ]);
     }
 
