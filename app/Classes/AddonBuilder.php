@@ -68,7 +68,7 @@ class AddonBuilder
     {
         $sceleton = file_get_contents(__DIR__ . '/../Resurces/addon.abres');
         $addon = simplexml_load_string($sceleton);
-
+ 
         $addon->addAttribute('scheme', $this->scheme);
         $addon->addAttribute('edition_type', $this->edition_type);
 

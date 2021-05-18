@@ -16,7 +16,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">{{ trans('vars.menu_show_snippets') }}</a>
-            </li>
+            </li> 
             <li class="nav-item">
                 <a class="nav-link" href="#">{{ trans('vars.menu_links') }}</a>
             </li>

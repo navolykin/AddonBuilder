@@ -6,7 +6,7 @@ return [
     'menu_create_addon' => 'Создать модуль',
     'menu_show_snippets' => 'Посмотреть сниппеты',
     'menu_links' => 'Ссылки',
-    'menu_about' => 'О приложении',
+    'menu_about' => 'О приложении', 
 
     'addon_params' => 'Параметры модуля',
     'addon_info' => 'Укажите параметры создаваемого модуля',

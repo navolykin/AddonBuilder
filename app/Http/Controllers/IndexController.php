@@ -14,7 +14,7 @@ class IndexController extends Controller
     }
 
     public function index()
-    {
+    { 
         $title = trans('vars.index_title');
         $all_projects = scandir(base_path() . '/..');
         foreach ($all_projects as $key => $value) {
