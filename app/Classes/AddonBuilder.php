@@ -20,6 +20,7 @@ class AddonBuilder
     const RES_CONFIG = 'config';
 
     protected $project_name;
+    protected $addon_data;
 
     protected $id;
     protected $scheme;
@@ -31,13 +32,16 @@ class AddonBuilder
     protected $priority = 90000;
     protected $position = 900;
     protected $status = self::STATUS_ACTIVE;
+
     protected $auto_install = [];
     protected $has_icon = 'Y';
     protected $default_language = 'en';
 
+    protected $result = [];
 
 
-    public function __construct($project_name, $addon_id, $schema = self::SCHEMA_VERSION_30)
+
+    public function __construct($project_name, $addon_id, $addon_data = [], $schema = self::SCHEMA_VERSION_30)
     {
         if (!is_dir($project_name)) {
             throw new \Exception("There is no suitable project", 1);
@@ -52,6 +56,10 @@ class AddonBuilder
         $this->project_name = $project_name;
         $this->scheme = $schema;
         $this->addon_dir_name = $this->project_name . self::ADDONS_DIR . $this->id;
+
+        if (!empty($addon_data) && is_array($addon_data)) {
+            $this->setAddonData($addon_data);
+        }
     }
 
     protected function isAvailableId($id)
@@ -63,6 +71,27 @@ class AddonBuilder
         return  true;
     }
 
+    protected function setAddonData($addon_data)
+    {
+        $this->addon_data = $addon_data;
+
+        if (!empty($addon_data['version'])) {
+            $this->version = $addon_data['version'];
+        }
+
+        if (!empty($addon_data['priority'])) {
+            $this->priority = intval($addon_data['priority']);
+        }
+
+        if (!empty($addon_data['position'])) {
+            $this->position = intval($addon_data['position']);
+        }
+
+        if (!empty($addon_data['status']) && in_array($addon_data['status'], [self::STATUS_ACTIVE, self::STATUS_DISABLED])) {
+            $this->status = $addon_data['status'];
+        }
+    }
+
 
     public function build()
     {
@@ -72,11 +101,13 @@ class AddonBuilder
         $addon->addAttribute('scheme', $this->scheme);
         $addon->addAttribute('edition_type', $this->edition_type);
 
-        $addon->id = $this->id;
-        $addon->version = $this->version;
+        $addon->id       = $this->id;
+
+        $addon->version  = $this->version;
         $addon->priority = $this->priority;
         $addon->position = $this->position;
-        $addon->status = $this->status;
+        $addon->status   = $this->status;
+
         $addon->auto_install = implode(',', $this->auto_install);
         $addon->has_icon = $this->has_icon;
         $addon->default_language = $this->default_language;
@@ -92,21 +123,40 @@ class AddonBuilder
 
         $addon->asXML($this->addon_dir_name . '/addon.xml');
         chmod($this->addon_dir_name . '/addon.xml', 0777);
+        $this->result[$this->addon_dir_name . '/addon.xml'] = true;
 
-        $this->createResFile(self::RES_FUNC);
-        $this->createResFile(self::RES_INIT);
-        $this->createResFile(self::RES_CONFIG);
+        if (isset($this->addon_data['func']) && $this->addon_data['func'] == 'Y') {
+            $this->createResFile(self::RES_FUNC);
+        }
+
+        if (isset($this->addon_data['init']) && $this->addon_data['init'] == 'Y') {
+            $this->createResFile(self::RES_INIT);
+        }
+
+        if (isset($this->addon_data['config']) && $this->addon_data['config'] == 'Y') {
+            $this->createResFile(self::RES_CONFIG);
+        }
 
         $this->addIcon();
+
+        return $this->result;
     }
 
     public function createResFile($res)
     {
         if (in_array($res, [self::RES_FUNC, self::RES_INIT, self::RES_CONFIG])) {
             $data = file_get_contents(__DIR__ . '/../Resurces/' . $res . '.abres');
-            if (!file_exists($this->addon_dir_name . '/' . $res)) {
-                file_put_contents($this->addon_dir_name . '/' . $res . '.php', $data);
-                chmod($this->addon_dir_name . '/' . $res . '.php', 0777);
+            $f_path = $this->addon_dir_name . '/' . $res . '.php';
+
+            if (!file_exists($f_path)) {
+                $result = file_put_contents($f_path, $data);
+                chmod($f_path, 0777);
+
+                if ($result !== false) {
+                    $this->result[$f_path] = true;
+                } else {
+                    $this->result[$f_path] = false;
+                }
             }
         }
     }
@@ -114,12 +164,20 @@ class AddonBuilder
     public function addIcon()
     {
         $data = file_get_contents(__DIR__ . '/../Resurces/icon.abres');
+        $dir_path = $this->project_name . self::ICON_DIR . $this->id;
+        $f_path = $dir_path . '/' . 'icon.png';
 
-        mkdir($this->project_name . self::ICON_DIR . $this->id);
-        chmod($this->project_name . self::ICON_DIR . $this->id, 0777);
-        if (!file_exists($this->project_name . self::ICON_DIR . $this->id . '/' . 'icon.png')) {
-            file_put_contents($this->project_name . self::ICON_DIR . $this->id . '/' . 'icon.png', $data);
-            chmod($this->project_name . self::ICON_DIR . $this->id . '/' . 'icon.png', 0777);
+        mkdir($dir_path);
+        chmod($dir_path, 0777);
+        if (!file_exists($f_path)) {
+            $result = file_put_contents($f_path, $data);
+            chmod($f_path, 0777);
+
+            if ($result !== false) {
+                $this->result[$f_path] = true;
+            } else {
+                $this->result[$f_path] = false;
+            }
         }
     }
 
